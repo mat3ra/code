@@ -111,12 +111,26 @@ describe("JsonSchemaValidator.validateAndClean", () => {
         expect(result.isValid).to.equal(true);
     });
 
+    it("strips an optional constrained property sent as an empty string", () => {
+        const schema = {
+            ...cleanSchema,
+            $id: "test/code-validator-optional-constrained-string",
+            properties: { ...cleanSchema.properties, slug: { type: "string", minLength: 4 } },
+        };
+
+        const data = { name: "Si", slug: "" };
+
+        const result = jsonSchemaValidator.validateAndClean(data, schema);
+
+        expect(result.isValid).to.equal(true);
+        expect(result.validated).to.deep.equal({ name: "Si" });
+    });
+
     it("leaves null keys for AJV when removeNull is false", () => {
         // AJV coerceTypes may turn null → "" for string fields; the option only skips our pre-strip.
-        // The output strip is off here so that coerced empty string stays observable.
         const validator = new JsonSchemaValidator({
             removeNull: false,
-            removeEmptyStrings: false,
+            removeEmptyStrings: true,
         });
         const schema = {
             ...cleanSchema,

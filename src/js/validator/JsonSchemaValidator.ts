@@ -34,32 +34,59 @@ export type JsonSchemaValidatorOptions = {
      */
     removeNull?: boolean;
     /**
-     * Delete object properties whose value is `""` from the validated output (default: `true`).
+     * Delete object properties whose value is `""` before AJV, except where the enclosing schema
+     * lists them as required (default: `true`).
      * Keep `false` when empty strings are intentional placeholders (e.g. flowchart links).
      */
     removeEmptyStrings?: boolean;
 };
 
 /**
- * Recursively deletes empty-string object properties (mutates in place).
+ * A schema together with every `allOf` / `anyOf` / `oneOf` branch applying at the same level.
+ * Branches are unioned, not selected: keeping a key can only let AJV judge what was actually sent.
  */
-function removeEmptyStringProperties(obj: AnyObject): AnyObject {
+function flattenSchemaBranches(schema: AnyObject): AnyObject[] {
+    if (typeof schema !== "object" || schema === null) {
+        return [];
+    }
+
+    const branches = ["allOf", "anyOf", "oneOf"].flatMap((keyword) =>
+        Array.isArray(schema[keyword]) ? schema[keyword] : [],
+    );
+
+    return [schema, ...branches.flatMap(flattenSchemaBranches)];
+}
+
+/**
+ * Recursively deletes empty-string object properties (mutates in place), keeping those the schema
+ * lists in `required`: `""` reads as "cleared, treat as absent" only where absence is legal, and as
+ * an empty string where the property must be there. Properties no subschema describes are deleted.
+ */
+function removeEmptyStringProperties(obj: AnyObject, schemas: AnyObject[] = []): AnyObject {
     if (typeof obj !== "object" || obj === null) {
         return obj;
     }
 
+    const levels = schemas.flatMap(flattenSchemaBranches);
+
     if (Array.isArray(obj)) {
-        obj.forEach((item) => removeEmptyStringProperties(item));
+        const itemSchemas = levels.map((level) => level.items).filter(Boolean);
+        obj.forEach((item) => removeEmptyStringProperties(item, itemSchemas));
         return obj;
     }
+
+    const requiredKeys = levels.flatMap((level) => level.required || []);
 
     Object.keys(obj).forEach((key) => {
         const value = obj[key];
 
         if (value === "") {
-            delete obj[key];
+            if (!requiredKeys.includes(key)) {
+                delete obj[key];
+            }
         } else if (typeof value === "object") {
-            removeEmptyStringProperties(value);
+            const propertySchemas = levels.map((level) => level.properties?.[key]).filter(Boolean);
+            removeEmptyStringProperties(value, propertySchemas);
         }
     });
 
@@ -259,7 +286,7 @@ export class JsonSchemaValidator {
 
     /**
      * Validates and cleans data against the schema.
-     * Optionally drops null properties before AJV, and empty-string properties after it.
+     * Optionally drops null / empty-string properties (constructor options), then AJV removeAdditional.
      */
     validateAndClean(data: AnyObject, jsonSchema: ValidationSchema) {
         const validated = { ...data };
@@ -268,17 +295,15 @@ export class JsonSchemaValidator {
             removeEmptyAndNullProperties(validated);
         }
 
+        if (this.removeEmptyStrings) {
+            removeEmptyStringProperties(validated, [jsonSchema]);
+        }
+
         const compiledValidator = this.getCompiledValidator({
             ...jsonSchema,
             additionalProperties: false,
         });
         const isValid = compiledValidator(validated);
-
-        // After AJV: an empty string can satisfy a required property, so stripping it first
-        // makes AJV reject the payload for the very key that was deleted.
-        if (this.removeEmptyStrings) {
-            removeEmptyStringProperties(validated);
-        }
 
         return {
             isValid,
