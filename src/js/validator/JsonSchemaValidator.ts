@@ -34,7 +34,7 @@ export type JsonSchemaValidatorOptions = {
      */
     removeNull?: boolean;
     /**
-     * Delete object properties whose value is `""` before AJV (default: `true`).
+     * Delete object properties whose value is `""` from the validated output (default: `true`).
      * Keep `false` when empty strings are intentional placeholders (e.g. flowchart links).
      */
     removeEmptyStrings?: boolean;
@@ -259,7 +259,7 @@ export class JsonSchemaValidator {
 
     /**
      * Validates and cleans data against the schema.
-     * Optionally drops null / empty-string properties (constructor options), then AJV removeAdditional.
+     * Optionally drops null properties before AJV, and empty-string properties after it.
      */
     validateAndClean(data: AnyObject, jsonSchema: ValidationSchema) {
         const validated = { ...data };
@@ -268,15 +268,17 @@ export class JsonSchemaValidator {
             removeEmptyAndNullProperties(validated);
         }
 
-        if (this.removeEmptyStrings) {
-            removeEmptyStringProperties(validated);
-        }
-
         const compiledValidator = this.getCompiledValidator({
             ...jsonSchema,
             additionalProperties: false,
         });
         const isValid = compiledValidator(validated);
+
+        // After AJV: an empty string can satisfy a required property, so stripping it first
+        // makes AJV reject the payload for the very key that was deleted.
+        if (this.removeEmptyStrings) {
+            removeEmptyStringProperties(validated);
+        }
 
         return {
             isValid,
