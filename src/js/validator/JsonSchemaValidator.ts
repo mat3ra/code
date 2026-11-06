@@ -4,7 +4,7 @@
  * Why this exists (alongside esse `utils/ajv`):
  * - Compose schemas with `mergeAllOf` and enforce allowlists via `additionalProperties: false`
  *   so callers can reject unknown / system-owned fields.
- * - Optionally strip null / empty-string properties before type checks (see constructor options).
+ * - Optionally strip null properties before type checks (see constructor option).
  * - Map raw AJV errors into stable nested field → code objects (LIVR-style) for consumers that
  *   need machine-readable validation results.
  *
@@ -33,75 +33,12 @@ export type JsonSchemaValidatorOptions = {
      * Nested objects are walked; array elements are not removed.
      */
     removeNull?: boolean;
-    /**
-     * Delete object properties whose value is `""` before AJV, except where the enclosing schema
-     * lists them as required (default: `true`).
-     * Keep `false` when empty strings are intentional placeholders (e.g. flowchart links).
-     */
-    removeEmptyStrings?: boolean;
 };
-
-/**
- * A schema together with every `allOf` / `anyOf` / `oneOf` branch applying at the same level.
- * Unioning the branches only approximates AJV, which selects one, so a key required by any branch
- * is kept for all of them. Two ways that turns a valid payload invalid: under an undiscriminated
- * `oneOf` the kept key can make a second branch match, breaking the exactly-one rule; under `anyOf`
- * it can fail a constraint every branch carries, where stripping it had let one branch pass.
- */
-function flattenSchemaBranches(schema: AnyObject): AnyObject[] {
-    if (typeof schema !== "object" || schema === null) {
-        return [];
-    }
-
-    const branches = ["allOf", "anyOf", "oneOf"].flatMap((keyword) =>
-        Array.isArray(schema[keyword]) ? schema[keyword] : [],
-    );
-
-    return [schema, ...branches.flatMap(flattenSchemaBranches)];
-}
-
-/**
- * Recursively deletes empty-string object properties (mutates in place), keeping those the schema
- * lists in `required`: `""` reads as "cleared, treat as absent" only where absence is legal, and as
- * an empty string where the property must be there. Properties no subschema describes are deleted.
- */
-function removeEmptyStringProperties(obj: AnyObject, schemas: AnyObject[]): AnyObject {
-    if (typeof obj !== "object" || obj === null) {
-        return obj;
-    }
-
-    const levels = schemas.flatMap(flattenSchemaBranches);
-
-    if (Array.isArray(obj)) {
-        const itemSchemas = levels.map((level) => level.items).filter(Boolean);
-        obj.forEach((item) => removeEmptyStringProperties(item, itemSchemas));
-        return obj;
-    }
-
-    const requiredKeys = levels.flatMap((level) => level.required || []);
-
-    Object.keys(obj).forEach((key) => {
-        const value = obj[key];
-
-        if (value === "") {
-            if (!requiredKeys.includes(key)) {
-                delete obj[key];
-            }
-        } else if (typeof value === "object") {
-            const propertySchemas = levels.map((level) => level.properties?.[key]).filter(Boolean);
-            removeEmptyStringProperties(value, propertySchemas);
-        }
-    });
-
-    return obj;
-}
 
 export class JsonSchemaValidator {
     private readonly ajv: Ajv;
 
     private readonly removeNull: boolean;
-
-    private readonly removeEmptyStrings: boolean;
 
     private readonly formatCodeMap: Record<string, string> = {
         email: "WRONG_EMAIL",
@@ -121,9 +58,8 @@ export class JsonSchemaValidator {
         additionalProperties: "UNKNOWN_PROPERTY",
     };
 
-    constructor({ removeNull = true, removeEmptyStrings = true }: JsonSchemaValidatorOptions = {}) {
+    constructor({ removeNull = true }: JsonSchemaValidatorOptions = {}) {
         this.removeNull = removeNull;
-        this.removeEmptyStrings = removeEmptyStrings;
 
         this.ajv = new Ajv({
             allErrors: true,
@@ -289,17 +225,13 @@ export class JsonSchemaValidator {
 
     /**
      * Validates and cleans data against the schema.
-     * Optionally drops null / empty-string properties (constructor options), then AJV removeAdditional.
+     * Optionally drops null properties (constructor option), then AJV removeAdditional.
      */
     validateAndClean(data: AnyObject, jsonSchema: ValidationSchema) {
         const validated = { ...data };
 
         if (this.removeNull) {
             removeEmptyAndNullProperties(validated);
-        }
-
-        if (this.removeEmptyStrings) {
-            removeEmptyStringProperties(validated, [jsonSchema]);
         }
 
         const compiledValidator = this.getCompiledValidator({
@@ -317,5 +249,5 @@ export class JsonSchemaValidator {
     }
 }
 
-/** Shared singleton — hosts register app formats on this instance (null + "" strip on). */
+/** Shared singleton — hosts register app formats on this instance (null strip on). */
 export const jsonSchemaValidator = new JsonSchemaValidator();

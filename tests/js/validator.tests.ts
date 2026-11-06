@@ -64,11 +64,10 @@ describe("JsonSchemaValidator.transformErrors", () => {
 });
 
 describe("JsonSchemaValidator.validateAndClean", () => {
-    it("strips nulls, empty strings, and additional properties by default", () => {
+    it("strips nulls and additional properties by default", () => {
         const data = {
             name: "Si",
             slug: null,
-            description: "",
             owner: { _id: "x" },
         };
 
@@ -78,99 +77,19 @@ describe("JsonSchemaValidator.validateAndClean", () => {
         expect(result.validated).to.deep.equal({ name: "Si" });
     });
 
-    it("keeps empty strings when removeEmptyStrings is false", () => {
-        const validator = new JsonSchemaValidator({
-            removeNull: true,
-            removeEmptyStrings: false,
-        });
-        const schema = {
-            ...cleanSchema,
-            $id: "test/code-validator-keep-empty",
-        };
-
-        const result = validator.validateAndClean(
-            { name: "Si", slug: null, description: "" },
-            schema,
+    it("keeps a property sent as an empty string", () => {
+        const result = jsonSchemaValidator.validateAndClean(
+            { name: "Si", description: "" },
+            cleanSchema,
         );
 
         expect(result.isValid).to.equal(true);
         expect(result.validated).to.deep.equal({ name: "Si", description: "" });
     });
 
-    it("keeps a required property sent as an empty string", () => {
-        const schema = {
-            ...cleanSchema,
-            $id: "test/code-validator-required-empty-string",
-            required: ["name", "description"],
-        };
-
-        const data = { name: "Si", description: "" };
-
-        const result = jsonSchemaValidator.validateAndClean(data, schema);
-
-        expect(result.isValid).to.equal(true);
-        expect(result.validated).to.deep.equal({ name: "Si", description: "" });
-    });
-
-    it("strips an optional constrained property sent as an empty string", () => {
-        const schema = {
-            ...cleanSchema,
-            $id: "test/code-validator-optional-constrained-string",
-            properties: { ...cleanSchema.properties, slug: { type: "string", minLength: 4 } },
-        };
-
-        const data = { name: "Si", slug: "" };
-
-        const result = jsonSchemaValidator.validateAndClean(data, schema);
-
-        expect(result.isValid).to.equal(true);
-        expect(result.validated).to.deep.equal({ name: "Si" });
-    });
-
-    it("keeps a required property nested in an array under a discriminated oneOf", () => {
-        const template = {
-            type: "object",
-            properties: { content: { type: "string" } },
-            required: ["content"],
-        };
-        const executionUnit = {
-            properties: {
-                type: { const: "execution" },
-                input: { type: "array", items: { type: "object", properties: { template } } },
-            },
-        };
-        const schema = {
-            $id: "test/code-validator-nested-required-empty-string",
-            type: "object",
-            properties: {
-                units: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        required: ["type"],
-                        discriminator: { propertyName: "type" },
-                        oneOf: [executionUnit, { properties: { type: { const: "assignment" } } }],
-                    },
-                },
-            },
-        };
-
-        const data = { units: [{ type: "execution", input: [{ template: { content: "" } }] }] };
-
-        const result = jsonSchemaValidator.validateAndClean(data, schema);
-
-        expect(result.isValid).to.equal(true);
-        expect(result.validated).to.deep.equal({
-            units: [{ type: "execution", input: [{ template: { content: "" } }] }],
-        });
-    });
-
     it("leaves null keys for AJV when removeNull is false", () => {
         // AJV coerceTypes may turn null → "" for string fields; the option only skips our pre-strip.
-        const validator = new JsonSchemaValidator({
-            removeNull: false,
-            removeEmptyStrings: true,
-        });
+        const validator = new JsonSchemaValidator({ removeNull: false });
         const schema = {
             ...cleanSchema,
             $id: "test/code-validator-keep-null-keys",
