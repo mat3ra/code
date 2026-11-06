@@ -43,7 +43,8 @@ export type JsonSchemaValidatorOptions = {
 
 /**
  * A schema together with every `allOf` / `anyOf` / `oneOf` branch applying at the same level.
- * Branches are unioned, not selected: keeping a key can only let AJV judge what was actually sent.
+ * Unioning the branches only approximates AJV, which selects one: under `anyOf` or an
+ * undiscriminated `oneOf` a kept key can make a second branch match and turn a valid payload invalid.
  */
 function flattenSchemaBranches(schema: AnyObject): AnyObject[] {
     if (typeof schema !== "object" || schema === null) {
@@ -62,7 +63,7 @@ function flattenSchemaBranches(schema: AnyObject): AnyObject[] {
  * lists in `required`: `""` reads as "cleared, treat as absent" only where absence is legal, and as
  * an empty string where the property must be there. Properties no subschema describes are deleted.
  */
-function removeEmptyStringProperties(obj: AnyObject, schemas: AnyObject[] = []): AnyObject {
+function removeEmptyStringProperties(obj: AnyObject, schemas: AnyObject[]): AnyObject {
     if (typeof obj !== "object" || obj === null) {
         return obj;
     }

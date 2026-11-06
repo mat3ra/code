@@ -97,7 +97,7 @@ describe("JsonSchemaValidator.validateAndClean", () => {
         expect(result.validated).to.deep.equal({ name: "Si", description: "" });
     });
 
-    it("keeps a required property whose value is an empty string valid", () => {
+    it("keeps a required property sent as an empty string", () => {
         const schema = {
             ...cleanSchema,
             $id: "test/code-validator-required-empty-string",
@@ -109,6 +109,7 @@ describe("JsonSchemaValidator.validateAndClean", () => {
         const result = jsonSchemaValidator.validateAndClean(data, schema);
 
         expect(result.isValid).to.equal(true);
+        expect(result.validated).to.deep.equal({ name: "Si", description: "" });
     });
 
     it("strips an optional constrained property sent as an empty string", () => {
@@ -124,6 +125,44 @@ describe("JsonSchemaValidator.validateAndClean", () => {
 
         expect(result.isValid).to.equal(true);
         expect(result.validated).to.deep.equal({ name: "Si" });
+    });
+
+    it("keeps a required property nested in an array under a discriminated oneOf", () => {
+        const template = {
+            type: "object",
+            properties: { content: { type: "string" } },
+            required: ["content"],
+        };
+        const executionUnit = {
+            properties: {
+                type: { const: "execution" },
+                input: { type: "array", items: { type: "object", properties: { template } } },
+            },
+        };
+        const schema = {
+            $id: "test/code-validator-nested-required-empty-string",
+            type: "object",
+            properties: {
+                units: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        required: ["type"],
+                        discriminator: { propertyName: "type" },
+                        oneOf: [executionUnit, { properties: { type: { const: "assignment" } } }],
+                    },
+                },
+            },
+        };
+
+        const data = { units: [{ type: "execution", input: [{ template: { content: "" } }] }] };
+
+        const result = jsonSchemaValidator.validateAndClean(data, schema);
+
+        expect(result.isValid).to.equal(true);
+        expect(result.validated).to.deep.equal({
+            units: [{ type: "execution", input: [{ template: { content: "" } }] }],
+        });
     });
 
     it("leaves null keys for AJV when removeNull is false", () => {
