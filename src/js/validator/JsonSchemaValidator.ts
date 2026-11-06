@@ -4,7 +4,7 @@
  * Why this exists (alongside esse `utils/ajv`):
  * - Compose schemas with `mergeAllOf` and enforce allowlists via `additionalProperties: false`
  *   so callers can reject unknown / system-owned fields.
- * - Optionally strip null properties before type checks (see constructor option).
+ * - Optionally strip null / empty-string properties before type checks (see constructor options).
  * - Map raw AJV errors into stable nested field → code objects (LIVR-style) for consumers that
  *   need machine-readable validation results.
  *
@@ -33,12 +33,45 @@ export type JsonSchemaValidatorOptions = {
      * Nested objects are walked; array elements are not removed.
      */
     removeNull?: boolean;
+    /**
+     * Delete object properties whose value is `""` before AJV (default: `true`).
+     * Keep `false` when empty strings are intentional placeholders (e.g. flowchart links).
+     */
+    removeEmptyStrings?: boolean;
 };
+
+/**
+ * Recursively deletes empty-string object properties (mutates in place).
+ */
+function removeEmptyStringProperties(obj: AnyObject): AnyObject {
+    if (typeof obj !== "object" || obj === null) {
+        return obj;
+    }
+
+    if (Array.isArray(obj)) {
+        obj.forEach((item) => removeEmptyStringProperties(item));
+        return obj;
+    }
+
+    Object.keys(obj).forEach((key) => {
+        const value = obj[key];
+
+        if (value === "") {
+            delete obj[key];
+        } else if (typeof value === "object") {
+            removeEmptyStringProperties(value);
+        }
+    });
+
+    return obj;
+}
 
 export class JsonSchemaValidator {
     private readonly ajv: Ajv;
 
     private readonly removeNull: boolean;
+
+    private readonly removeEmptyStrings: boolean;
 
     private readonly formatCodeMap: Record<string, string> = {
         email: "WRONG_EMAIL",
@@ -58,8 +91,9 @@ export class JsonSchemaValidator {
         additionalProperties: "UNKNOWN_PROPERTY",
     };
 
-    constructor({ removeNull = true }: JsonSchemaValidatorOptions = {}) {
+    constructor({ removeNull = true, removeEmptyStrings = true }: JsonSchemaValidatorOptions = {}) {
         this.removeNull = removeNull;
+        this.removeEmptyStrings = removeEmptyStrings;
 
         this.ajv = new Ajv({
             allErrors: true,
@@ -225,13 +259,17 @@ export class JsonSchemaValidator {
 
     /**
      * Validates and cleans data against the schema.
-     * Optionally drops null properties (constructor option), then AJV removeAdditional.
+     * Optionally drops null / empty-string properties (constructor options), then AJV removeAdditional.
      */
     validateAndClean(data: AnyObject, jsonSchema: ValidationSchema) {
         const validated = { ...data };
 
         if (this.removeNull) {
             removeEmptyAndNullProperties(validated);
+        }
+
+        if (this.removeEmptyStrings) {
+            removeEmptyStringProperties(validated);
         }
 
         const compiledValidator = this.getCompiledValidator({
@@ -249,5 +287,5 @@ export class JsonSchemaValidator {
     }
 }
 
-/** Shared singleton — hosts register app formats on this instance (null strip on). */
+/** Shared singleton — hosts register app formats on this instance (null + "" strip on). */
 export const jsonSchemaValidator = new JsonSchemaValidator();

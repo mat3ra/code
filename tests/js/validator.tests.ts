@@ -64,10 +64,11 @@ describe("JsonSchemaValidator.transformErrors", () => {
 });
 
 describe("JsonSchemaValidator.validateAndClean", () => {
-    it("strips nulls and additional properties by default", () => {
+    it("strips nulls, empty strings, and additional properties by default", () => {
         const data = {
             name: "Si",
             slug: null,
+            description: "",
             owner: { _id: "x" },
         };
 
@@ -77,10 +78,19 @@ describe("JsonSchemaValidator.validateAndClean", () => {
         expect(result.validated).to.deep.equal({ name: "Si" });
     });
 
-    it("keeps a property sent as an empty string", () => {
-        const result = jsonSchemaValidator.validateAndClean(
-            { name: "Si", description: "" },
-            cleanSchema,
+    it("keeps empty strings when removeEmptyStrings is false", () => {
+        const validator = new JsonSchemaValidator({
+            removeNull: true,
+            removeEmptyStrings: false,
+        });
+        const schema = {
+            ...cleanSchema,
+            $id: "test/code-validator-keep-empty",
+        };
+
+        const result = validator.validateAndClean(
+            { name: "Si", slug: null, description: "" },
+            schema,
         );
 
         expect(result.isValid).to.equal(true);
@@ -89,7 +99,10 @@ describe("JsonSchemaValidator.validateAndClean", () => {
 
     it("leaves null keys for AJV when removeNull is false", () => {
         // AJV coerceTypes may turn null → "" for string fields; the option only skips our pre-strip.
-        const validator = new JsonSchemaValidator({ removeNull: false });
+        const validator = new JsonSchemaValidator({
+            removeNull: false,
+            removeEmptyStrings: true,
+        });
         const schema = {
             ...cleanSchema,
             $id: "test/code-validator-keep-null-keys",
