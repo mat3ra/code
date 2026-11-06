@@ -43,8 +43,10 @@ export type JsonSchemaValidatorOptions = {
 
 /**
  * A schema together with every `allOf` / `anyOf` / `oneOf` branch applying at the same level.
- * Unioning the branches only approximates AJV, which selects one: under `anyOf` or an
- * undiscriminated `oneOf` a kept key can make a second branch match and turn a valid payload invalid.
+ * Unioning the branches only approximates AJV, which selects one, so a key required by any branch
+ * is kept for all of them. Two ways that turns a valid payload invalid: under an undiscriminated
+ * `oneOf` the kept key can make a second branch match, breaking the exactly-one rule; under `anyOf`
+ * it can fail a constraint every branch carries, where stripping it had let one branch pass.
  */
 function flattenSchemaBranches(schema: AnyObject): AnyObject[] {
     if (typeof schema !== "object" || schema === null) {
