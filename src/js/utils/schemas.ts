@@ -183,7 +183,7 @@ export const schemaByNamedEntityName = (name: string): JSONSchema7 | undefined =
     const translatedName = name.replace(/_/g, "-");
     return JSONSchemasInterface.matchSchema({
         $id: {
-            $regex: `${translatedName}$`,
+            $regex: `(^|/)${translatedName}$`,
         },
     });
 };
