@@ -3,7 +3,7 @@ import type {
     HasConsistencyCheckSchema,
 } from "@mat3ra/esse/dist/js/types";
 
-import type { InMemoryEntity } from "../entity/in_memory";
+import { InMemoryEntity } from "../entity/in_memory";
 
 export type HasConsistencyChecksSchemaMixin = HasConsistencyCheckSchema;
 
@@ -21,7 +21,12 @@ export function hasConsistencyChecksSchemaMixin<T extends InMemoryEntity>(
             return this.prop("consistencyChecks");
         },
         set consistencyChecks(value: HasConsistencyCheckSchema["consistencyChecks"]) {
-            this.setProp("consistencyChecks", value);
+            this.setProp(
+                "consistencyChecks",
+                value?.map((item: unknown) =>
+                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                ),
+            );
         },
     };
 

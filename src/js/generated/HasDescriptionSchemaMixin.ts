@@ -1,6 +1,6 @@
 import type { BaseInMemoryEntitySchema, DescriptionSchema } from "@mat3ra/esse/dist/js/types";
 
-import type { InMemoryEntity } from "../entity/in_memory";
+import { InMemoryEntity } from "../entity/in_memory";
 
 export type HasDescriptionSchemaMixin = DescriptionSchema;
 
@@ -23,7 +23,10 @@ export function hasDescriptionSchemaMixin<T extends InMemoryEntity>(
             return this.prop("descriptionObject");
         },
         set descriptionObject(value: DescriptionSchema["descriptionObject"]) {
-            this.setProp("descriptionObject", value);
+            this.setProp(
+                "descriptionObject",
+                value instanceof InMemoryEntity ? value.toJSON() : value,
+            );
         },
     };
 

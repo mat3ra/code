@@ -324,6 +324,28 @@ describe("generateSchemaMixin Tests", function () {
         });
     });
 
+    describe("generateShemaMixin - Entity values", () => {
+        it("should store the JSON of an entity set on an object or array property", () => {
+            const outputPath = path.join(tempDir, "EntityHolderSchemaMixin.ts");
+            const schemas: JSONSchema7[] = [
+                {
+                    $id: "entity/holder",
+                    properties: { application: { type: "object" }, units: { type: "array" } },
+                },
+            ];
+
+            generateShemaMixin(schemas, { "entity/holder": outputPath });
+
+            const generatedCode = fs.readFileSync(outputPath, "utf-8");
+            expect(generatedCode).to.include(
+                "value instanceof InMemoryEntity ? value.toJSON() : value",
+            );
+            expect(generatedCode).to.include(
+                "item instanceof InMemoryEntity ? item.toJSON() : item",
+            );
+        });
+    });
+
     describe("generateShemaMixin - Entity Import Path", () => {
         it("should use default entity import path when not specified", () => {
             const outputPath = path.join(tempDir, "DefaultEntityPathSchemaMixin.ts");
@@ -335,7 +357,7 @@ describe("generateSchemaMixin Tests", function () {
 
             const generatedCode = fs.readFileSync(outputPath, "utf-8");
             expect(generatedCode).to.include(
-                'import type { InMemoryEntity } from "@mat3ra/code/dist/js/entity";',
+                'import { InMemoryEntity } from "@mat3ra/code/dist/js/entity";',
             );
             // Verify setters are generated
             expect(generatedCode).to.include("set name(value:");
@@ -366,7 +388,7 @@ describe("generateSchemaMixin Tests", function () {
 
             const generatedCode = fs.readFileSync(outputPath, "utf-8");
             expect(generatedCode).to.include(
-                `import type { InMemoryEntity } from "${customEntityPath}";`,
+                `import { InMemoryEntity } from "${customEntityPath}";`,
             );
             // Verify setters are generated
             expect(generatedCode).to.include("set description(value:");

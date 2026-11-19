@@ -1,6 +1,6 @@
 import type { BaseInMemoryEntitySchema, EntityTagsSchema } from "@mat3ra/esse/dist/js/types";
 
-import type { InMemoryEntity } from "../entity/in_memory";
+import { InMemoryEntity } from "../entity/in_memory";
 
 export type TaggableSchemaMixin = EntityTagsSchema;
 
@@ -15,7 +15,12 @@ export function taggableSchemaMixin<T extends InMemoryEntity>(
             return this.prop("tags");
         },
         set tags(value: EntityTagsSchema["tags"]) {
-            this.setProp("tags", value);
+            this.setProp(
+                "tags",
+                value?.map((item: unknown) =>
+                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                ),
+            );
         },
     };
 

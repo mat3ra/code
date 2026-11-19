@@ -1,6 +1,6 @@
 import type { BaseInMemoryEntitySchema, SystemInSetSchema } from "@mat3ra/esse/dist/js/types";
 
-import type { InMemoryEntity } from "../entity/in_memory";
+import { InMemoryEntity } from "../entity/in_memory";
 
 export type InSetSchemaMixin = SystemInSetSchema;
 
@@ -15,7 +15,12 @@ export function inSetSchemaMixin<T extends InMemoryEntity>(
             return this.requiredProp("inSet");
         },
         set inSet(value: SystemInSetSchema["inSet"]) {
-            this.setProp("inSet", value);
+            this.setProp(
+                "inSet",
+                value?.map((item: unknown) =>
+                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                ),
+            );
         },
     };
 
