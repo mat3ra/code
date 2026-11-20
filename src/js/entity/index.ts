@@ -9,7 +9,6 @@ import {
 import { ENTITY_SET_TYPES } from "./set/enums";
 import { InMemoryEntitySetMixin } from "./set/mixins";
 import { orderedEntityInSetMixin, orderedEntitySetMixin } from "./set/ordered/mixins";
-import * as selectorsForEntitySet from "./set/selectors";
 
 export {
     InMemoryEntity,
@@ -19,7 +18,6 @@ export {
     HasMetadataNamedDefaultableInMemoryEntity,
     HasConsistencyChecksHasMetadataNamedDefaultableInMemoryEntity,
     ENTITY_SET_TYPES,
-    selectorsForEntitySet,
     InMemoryEntitySetMixin,
     orderedEntitySetMixin,
     orderedEntityInSetMixin,
