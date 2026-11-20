@@ -338,10 +338,10 @@ describe("generateSchemaMixin Tests", function () {
 
             const generatedCode = fs.readFileSync(outputPath, "utf-8");
             expect(generatedCode).to.include(
-                "value instanceof InMemoryEntity ? value.toJSON() : value",
+                "value instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(value) : value",
             );
             expect(generatedCode).to.include(
-                "item instanceof InMemoryEntity ? item.toJSON() : item",
+                "item instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(item) : item",
             );
         });
     });

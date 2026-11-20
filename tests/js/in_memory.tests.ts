@@ -5,6 +5,7 @@ import type { BaseInMemoryEntitySchema } from "@mat3ra/esse/dist/js/types";
 import { expect } from "chai";
 
 import { InMemoryEntity } from "../../src/js/entity/in_memory";
+import { hasDescriptionSchemaMixin } from "../../src/js/generated/HasDescriptionSchemaMixin";
 
 class DerivedInMemoryEntity extends InMemoryEntity {
     static readonly jsonSchema = inMemoryEntitySchema as JSONSchema;
@@ -149,6 +150,22 @@ describe("InMemoryEntity", () => {
         entity.setProp("slug", "c");
 
         expect(data).to.have.property("slug", "c");
+    });
+
+    it("an entity set on a field is the entity for the stored data", () => {
+        const parent = new InMemoryEntity({});
+        hasDescriptionSchemaMixin(parent);
+        const child = new InMemoryEntity({ _id: "123" });
+
+        parent.descriptionObject = child;
+        const entity = InMemoryEntity.getEntityForData(
+            parent.descriptionObject,
+            (data) => new InMemoryEntity(data),
+        );
+        entity.setProp("slug", "c");
+
+        expect(entity).to.equal(child);
+        expect(parent.toJSON()).to.have.nested.property("descriptionObject.slug", "c");
     });
 
     it("jsonSchema clean", async () => {

@@ -25,7 +25,7 @@ export function hasDescriptionSchemaMixin<T extends InMemoryEntity>(
         set descriptionObject(value: DescriptionSchema["descriptionObject"]) {
             this.setProp(
                 "descriptionObject",
-                value instanceof InMemoryEntity ? value.toJSON() : value,
+                value instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(value) : value,
             );
         },
     };

@@ -18,7 +18,7 @@ export function inSetSchemaMixin<T extends InMemoryEntity>(
             this.setProp(
                 "inSet",
                 value?.map((item: unknown) =>
-                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                    item instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(item) : item,
                 ),
             );
         },

@@ -57,6 +57,11 @@ export class InMemoryEntity<S extends Schema = Schema> implements Schema {
         return entity;
     }
 
+    static getDataForEntity<E extends InMemoryEntity>(entity: E): E["_json"] {
+        entityByData.set(entity._json, entity);
+        return entity._json;
+    }
+
     // Override if deepClone of config is required
     static _isDeepCloneRequired = false;
 

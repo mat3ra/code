@@ -18,7 +18,7 @@ export function taggableSchemaMixin<T extends InMemoryEntity>(
             this.setProp(
                 "tags",
                 value?.map((item: unknown) =>
-                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                    item instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(item) : item,
                 ),
             );
         },

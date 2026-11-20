@@ -24,7 +24,7 @@ export function hasConsistencyChecksSchemaMixin<T extends InMemoryEntity>(
             this.setProp(
                 "consistencyChecks",
                 value?.map((item: unknown) =>
-                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                    item instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(item) : item,
                 ),
             );
         },

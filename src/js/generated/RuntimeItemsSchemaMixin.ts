@@ -20,7 +20,7 @@ export function runtimeItemsSchemaMixin<T extends InMemoryEntity>(
             this.setProp(
                 "preProcessors",
                 value?.map((item: unknown) =>
-                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                    item instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(item) : item,
                 ),
             );
         },
@@ -31,7 +31,7 @@ export function runtimeItemsSchemaMixin<T extends InMemoryEntity>(
             this.setProp(
                 "postProcessors",
                 value?.map((item: unknown) =>
-                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                    item instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(item) : item,
                 ),
             );
         },
@@ -42,7 +42,7 @@ export function runtimeItemsSchemaMixin<T extends InMemoryEntity>(
             this.setProp(
                 "monitors",
                 value?.map((item: unknown) =>
-                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                    item instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(item) : item,
                 ),
             );
         },
@@ -53,7 +53,7 @@ export function runtimeItemsSchemaMixin<T extends InMemoryEntity>(
             this.setProp(
                 "results",
                 value?.map((item: unknown) =>
-                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                    item instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(item) : item,
                 ),
             );
         },
