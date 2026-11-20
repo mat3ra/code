@@ -130,6 +130,27 @@ describe("InMemoryEntity", () => {
         expect(validateEntity(invalidEntity)).to.be.false;
     });
 
+    it("getEntityForData returns the same entity for the same data", () => {
+        const data = { _id: "123" };
+        const create = (config: BaseInMemoryEntitySchema) => new InMemoryEntity(config);
+
+        expect(InMemoryEntity.getEntityForData(data, create)).to.equal(
+            InMemoryEntity.getEntityForData(data, create),
+        );
+    });
+
+    it("getEntityForData keeps a change made on the entity in the data", () => {
+        const data = { _id: "123" };
+        const entity = InMemoryEntity.getEntityForData(
+            data,
+            (config) => new InMemoryEntity(config),
+        );
+
+        entity.setProp("slug", "c");
+
+        expect(data).to.have.property("slug", "c");
+    });
+
     it("jsonSchema clean", async () => {
         const config = {
             _id: "123",

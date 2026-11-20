@@ -133,6 +133,9 @@ function generateMixinFunction(
         if (type === "object") {
             storedValue = "value instanceof InMemoryEntity ? value.toJSON() : value";
         }
+        if (type === "array") {
+            storedValue = `value?.map((item: unknown) => (item instanceof InMemoryEntity ? item.toJSON() : item))`;
+        }
 
         code += `get ${propertyName}() {\n`;
         code += `return this.${methodName}("${propertyName}");\n`;

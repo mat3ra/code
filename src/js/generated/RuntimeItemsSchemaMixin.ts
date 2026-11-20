@@ -17,25 +17,45 @@ export function runtimeItemsSchemaMixin<T extends InMemoryEntity>(
             return this.requiredProp("preProcessors");
         },
         set preProcessors(value: RuntimeItemsSchema["preProcessors"]) {
-            this.setProp("preProcessors", value);
+            this.setProp(
+                "preProcessors",
+                value?.map((item: unknown) =>
+                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                ),
+            );
         },
         get postProcessors() {
             return this.requiredProp("postProcessors");
         },
         set postProcessors(value: RuntimeItemsSchema["postProcessors"]) {
-            this.setProp("postProcessors", value);
+            this.setProp(
+                "postProcessors",
+                value?.map((item: unknown) =>
+                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                ),
+            );
         },
         get monitors() {
             return this.requiredProp("monitors");
         },
         set monitors(value: RuntimeItemsSchema["monitors"]) {
-            this.setProp("monitors", value);
+            this.setProp(
+                "monitors",
+                value?.map((item: unknown) =>
+                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                ),
+            );
         },
         get results() {
             return this.requiredProp("results");
         },
         set results(value: RuntimeItemsSchema["results"]) {
-            this.setProp("results", value);
+            this.setProp(
+                "results",
+                value?.map((item: unknown) =>
+                    item instanceof InMemoryEntity ? item.toJSON() : item,
+                ),
+            );
         },
     };
 

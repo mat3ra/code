@@ -34,9 +34,27 @@ export class EntityError extends Error {
 
 type Schema = BaseInMemoryEntitySchema;
 
+const entityByData = new WeakMap<object, InMemoryEntity>();
+
 export class InMemoryEntity<S extends Schema = Schema> implements Schema {
     static create<T extends InMemoryEntity<Schema>>(config: Schema): T {
         return new (this.prototype.constructor as InMemoryEntityConstructor<T>)(config);
+    }
+
+    // The entity's data is the stored object, so a change made on the entity is in its parent's data
+    static getEntityForData<E extends InMemoryEntity, D extends object>(
+        data: D,
+        create: (data: D) => E,
+    ): E {
+        const knownEntity = entityByData.get(data);
+        if (knownEntity) {
+            return knownEntity as E;
+        }
+        const entity = create(data);
+        Object.keys(data).forEach((key) => delete (data as Record<string, unknown>)[key]);
+        entity._json = Object.assign(data, entity._json);
+        entityByData.set(data, entity);
+        return entity;
     }
 
     // Override if deepClone of config is required

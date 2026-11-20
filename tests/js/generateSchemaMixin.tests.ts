@@ -325,12 +325,12 @@ describe("generateSchemaMixin Tests", function () {
     });
 
     describe("generateShemaMixin - Entity values", () => {
-        it("should store the JSON of an entity set on an object property", () => {
+        it("should store the JSON of an entity set on an object or array property", () => {
             const outputPath = path.join(tempDir, "EntityHolderSchemaMixin.ts");
             const schemas: JSONSchema7[] = [
                 {
                     $id: "entity/holder",
-                    properties: { application: { type: "object" } },
+                    properties: { application: { type: "object" }, units: { type: "array" } },
                 },
             ];
 
@@ -339,6 +339,9 @@ describe("generateSchemaMixin Tests", function () {
             const generatedCode = fs.readFileSync(outputPath, "utf-8");
             expect(generatedCode).to.include(
                 "value instanceof InMemoryEntity ? value.toJSON() : value",
+            );
+            expect(generatedCode).to.include(
+                "item instanceof InMemoryEntity ? item.toJSON() : item",
             );
         });
     });
