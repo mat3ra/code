@@ -21,12 +21,7 @@ export function hasConsistencyChecksSchemaMixin<T extends InMemoryEntity>(
             return this.prop("consistencyChecks");
         },
         set consistencyChecks(value: HasConsistencyCheckSchema["consistencyChecks"]) {
-            this.setProp(
-                "consistencyChecks",
-                value?.map((item: unknown) =>
-                    item instanceof InMemoryEntity ? item.toJSON() : item,
-                ),
-            );
+            this.setProp("consistencyChecks", value);
         },
     };
 
