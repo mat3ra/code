@@ -43,6 +43,7 @@ export class InMemoryEntity<S extends Schema = Schema> implements Schema {
 
     /**
      * @summary The entity whose `_json` is `data` itself, built with `create` on first use.
+     * On first use, `data` is rewritten in place to the entity's normalized `_json`.
      * Data is stored once and shared with its entity, so a class holding entities sets
      * `_isDeepCloneRequired`: otherwise its `toJSON` clean edits the child's data.
      */
