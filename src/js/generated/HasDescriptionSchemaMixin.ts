@@ -2,7 +2,10 @@ import type { BaseInMemoryEntitySchema, DescriptionSchema } from "@mat3ra/esse/d
 
 import { InMemoryEntity } from "../entity/in_memory";
 
-export type HasDescriptionSchemaMixin = DescriptionSchema;
+export type HasDescriptionSchemaMixin = Omit<DescriptionSchema, "descriptionObject"> & {
+    get descriptionObject(): DescriptionSchema["descriptionObject"];
+    set descriptionObject(value: DescriptionSchema["descriptionObject"] | InMemoryEntity);
+};
 
 export type HasDescriptionInMemoryEntity = InMemoryEntity<
     BaseInMemoryEntitySchema & HasDescriptionSchemaMixin
@@ -13,20 +16,17 @@ export function hasDescriptionSchemaMixin<T extends InMemoryEntity>(
 ): asserts item is T & HasDescriptionSchemaMixin {
     // @ts-expect-error
     const properties: InMemoryEntity<HasDescriptionSchemaMixin> & HasDescriptionSchemaMixin = {
-        get description() {
+        get description(): DescriptionSchema["description"] {
             return this.prop("description");
         },
         set description(value: DescriptionSchema["description"]) {
             this.setProp("description", value);
         },
-        get descriptionObject() {
+        get descriptionObject(): DescriptionSchema["descriptionObject"] {
             return this.prop("descriptionObject");
         },
-        set descriptionObject(value: DescriptionSchema["descriptionObject"]) {
-            this.setProp(
-                "descriptionObject",
-                value instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(value) : value,
-            );
+        set descriptionObject(value: DescriptionSchema["descriptionObject"] | InMemoryEntity) {
+            this.setProp("descriptionObject", InMemoryEntity.getDataForEntity(value));
         },
     };
 

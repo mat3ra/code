@@ -11,7 +11,7 @@ export function bankableSchemaMixin<T extends InMemoryEntity>(
 ): asserts item is T & BankableSchemaMixin {
     // @ts-expect-error
     const properties: InMemoryEntity<BankableSchemaMixin> & BankableSchemaMixin = {
-        get exabyteId() {
+        get exabyteId(): BankableSchema["exabyteId"] {
             return this.requiredProp("exabyteId");
         },
         set exabyteId(value: BankableSchema["exabyteId"]) {

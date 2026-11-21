@@ -11,7 +11,7 @@ export function hashedSchemaMixin<T extends InMemoryEntity>(
 ): asserts item is T & HashedSchemaMixin {
     // @ts-expect-error
     const properties: InMemoryEntity<HashedSchemaMixin> & HashedSchemaMixin = {
-        get hash() {
+        get hash(): HashedSchema["hash"] {
             return this.requiredProp("hash");
         },
         set hash(value: HashedSchema["hash"]) {

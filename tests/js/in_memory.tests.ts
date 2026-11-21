@@ -168,6 +168,12 @@ describe("InMemoryEntity", () => {
         expect(parent.toJSON()).to.have.nested.property("descriptionObject.slug", "c");
     });
 
+    it("getDataForEntity returns a value that is not an entity as is", () => {
+        const data = { _id: "123" };
+
+        expect(InMemoryEntity.getDataForEntity(data)).to.equal(data);
+    });
+
     it("jsonSchema clean", async () => {
         const config = {
             _id: "123",

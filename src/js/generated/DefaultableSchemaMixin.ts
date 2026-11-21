@@ -13,7 +13,7 @@ export function defaultableSchemaMixin<T extends InMemoryEntity>(
 ): asserts item is T & DefaultableSchemaMixin {
     // @ts-expect-error
     const properties: InMemoryEntity<DefaultableSchemaMixin> & DefaultableSchemaMixin = {
-        get isDefault() {
+        get isDefault(): DefaultableEntitySchema["isDefault"] {
             return this.prop("isDefault");
         },
         set isDefault(value: DefaultableEntitySchema["isDefault"]) {

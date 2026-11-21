@@ -37,6 +37,25 @@ function generateTypeAnnotation(propertyName: string, schemaName: string): strin
 }
 
 /**
+ * Generates the setter's parameter type: an object or array property also takes entities
+ */
+function generateSetterTypeAnnotation(
+    typeAnnotation: string,
+    type: JSONSchema7["type"],
+    isRequired: boolean,
+): string {
+    if (type === "object") {
+        return `${typeAnnotation} | InMemoryEntity`;
+    }
+    if (type === "array") {
+        return `(NonNullable<${typeAnnotation}>[number] | InMemoryEntity)[]${
+            isRequired ? "" : " | undefined"
+        }`;
+    }
+    return typeAnnotation;
+}
+
+/**
  * Extracts properties from a schema, handling allOf if present
  * @param schema - The JSON schema
  * @returns - Object with properties and required fields
@@ -106,13 +125,30 @@ function generateMixinFunction(
     let code = `import { InMemoryEntity } from "${entityFrom}";\n`;
     code += `import type { BaseInMemoryEntitySchema, ${schemaName} } from "${from}";\n\n`;
 
-    // Generate the mixin type - only use Omit if skipFields has values
-    if (skipFields && skipFields.length > 0) {
-        const skipFieldNames = skipFields.map((field) => `"${field}"`).join(" | ");
-        code += `export type ${mixinTypeName} = Omit<${schemaName}, ${skipFieldNames}>;\n\n`;
-    } else {
-        code += `export type ${mixinTypeName} = ${schemaName};\n\n`;
+    // Generate the mixin type - object and array properties are re-declared with setters that take entities
+    const entityPropertyEntries = propertyEntries.filter(([, propertySchema]) =>
+        ["object", "array"].includes((propertySchema as JSONSchema7).type as string),
+    );
+    const omittedFields = [...skipFields, ...entityPropertyEntries.map(([name]) => name)];
+    let mixinType = schemaName;
+    if (omittedFields.length > 0) {
+        mixinType = `Omit<${schemaName}, ${omittedFields
+            .map((field) => `"${field}"`)
+            .join(" | ")}>`;
     }
+    if (entityPropertyEntries.length > 0) {
+        const accessors = entityPropertyEntries.map(([propertyName, propertySchema]) => {
+            const typeAnnotation = generateTypeAnnotation(propertyName, schemaName);
+            const setterType = generateSetterTypeAnnotation(
+                typeAnnotation,
+                (propertySchema as JSONSchema7).type,
+                isRequiredProperty(propertyName, required),
+            );
+            return `get ${propertyName}(): ${typeAnnotation};\nset ${propertyName}(value: ${setterType});\n`;
+        });
+        mixinType += ` & {\n${accessors.join("")}}`;
+    }
+    code += `export type ${mixinTypeName} = ${mixinType};\n\n`;
 
     // Entity schema must include base fields so `_json` / `toJSON` stay compatible with InMemoryEntity
     code += `export type ${entityTypeName} = InMemoryEntity<BaseInMemoryEntitySchema & ${mixinTypeName}>;\n\n`;
@@ -131,17 +167,20 @@ function generateMixinFunction(
         const { type } = propertySchema as JSONSchema7;
         let storedValue = "value";
         if (type === "object") {
-            storedValue =
-                "value instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(value) : value";
+            storedValue = "InMemoryEntity.getDataForEntity(value)";
         }
         if (type === "array") {
-            storedValue = `value?.map((item: unknown) => (item instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(item) : item))`;
+            storedValue = "value?.map((item) => InMemoryEntity.getDataForEntity(item))";
         }
 
-        code += `get ${propertyName}() {\n`;
+        code += `get ${propertyName}(): ${typeAnnotation} {\n`;
         code += `return this.${methodName}("${propertyName}");\n`;
         code += `},\n`;
-        code += `set ${propertyName}(value: ${typeAnnotation}) {\n`;
+        code += `set ${propertyName}(value: ${generateSetterTypeAnnotation(
+            typeAnnotation,
+            type,
+            isRequired,
+        )}) {\n`;
         code += `this.setProp("${propertyName}", ${storedValue});\n`;
         code += `}`;
 

@@ -34,32 +34,42 @@ export class EntityError extends Error {
 
 type Schema = BaseInMemoryEntitySchema;
 
-const entityByData = new WeakMap<object, InMemoryEntity>();
-
 export class InMemoryEntity<S extends Schema = Schema> implements Schema {
     static create<T extends InMemoryEntity<Schema>>(config: Schema): T {
         return new (this.prototype.constructor as InMemoryEntityConstructor<T>)(config);
     }
 
-    // The entity's data is the stored object, so a change made on the entity is in its parent's data
+    private static readonly entityByData = new WeakMap<object, InMemoryEntity>();
+
+    /**
+     * @summary The entity whose `_json` is `data` itself, built with `create` on first use.
+     * Data is stored once and shared with its entity, so a class holding entities sets
+     * `_isDeepCloneRequired`: otherwise its `toJSON` clean edits the child's data.
+     */
     static getEntityForData<E extends InMemoryEntity, D extends object>(
         data: D,
         create: (data: D) => E,
     ): E {
-        const knownEntity = entityByData.get(data);
+        const knownEntity = InMemoryEntity.entityByData.get(data);
         if (knownEntity) {
             return knownEntity as E;
         }
         const entity = create(data);
         Object.keys(data).forEach((key) => delete (data as Record<string, unknown>)[key]);
         entity._json = Object.assign(data, entity._json);
-        entityByData.set(data, entity);
+        InMemoryEntity.entityByData.set(data, entity);
         return entity;
     }
 
-    static getDataForEntity<E extends InMemoryEntity>(entity: E): E["_json"] {
-        entityByData.set(entity._json, entity);
-        return entity._json;
+    /**
+     * @summary The data to store for `value`: an entity's own `_json`, kept as that entity's data; any other value as is.
+     */
+    static getDataForEntity<T>(value: T | InMemoryEntity): T {
+        if (!(value instanceof InMemoryEntity)) {
+            return value;
+        }
+        InMemoryEntity.entityByData.set(value._json, value);
+        return value._json as T;
     }
 
     // Override if deepClone of config is required

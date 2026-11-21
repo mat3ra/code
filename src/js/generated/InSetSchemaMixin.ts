@@ -2,7 +2,10 @@ import type { BaseInMemoryEntitySchema, SystemInSetSchema } from "@mat3ra/esse/d
 
 import { InMemoryEntity } from "../entity/in_memory";
 
-export type InSetSchemaMixin = SystemInSetSchema;
+export type InSetSchemaMixin = Omit<SystemInSetSchema, "inSet"> & {
+    get inSet(): SystemInSetSchema["inSet"];
+    set inSet(value: (NonNullable<SystemInSetSchema["inSet"]>[number] | InMemoryEntity)[]);
+};
 
 export type InSetInMemoryEntity = InMemoryEntity<BaseInMemoryEntitySchema & InSetSchemaMixin>;
 
@@ -11,15 +14,13 @@ export function inSetSchemaMixin<T extends InMemoryEntity>(
 ): asserts item is T & InSetSchemaMixin {
     // @ts-expect-error
     const properties: InMemoryEntity<InSetSchemaMixin> & InSetSchemaMixin = {
-        get inSet() {
+        get inSet(): SystemInSetSchema["inSet"] {
             return this.requiredProp("inSet");
         },
-        set inSet(value: SystemInSetSchema["inSet"]) {
+        set inSet(value: (NonNullable<SystemInSetSchema["inSet"]>[number] | InMemoryEntity)[]) {
             this.setProp(
                 "inSet",
-                value?.map((item: unknown) =>
-                    item instanceof InMemoryEntity ? InMemoryEntity.getDataForEntity(item) : item,
-                ),
+                value?.map((item) => InMemoryEntity.getDataForEntity(item)),
             );
         },
     };
