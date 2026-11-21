@@ -131,10 +131,10 @@ function generateMixinFunction(
         const { type } = propertySchema as JSONSchema7;
         let storedValue = "value";
         if (type === "object") {
-            storedValue = "InMemoryEntity.getDataForEntity(value)";
+            storedValue = "InMemoryEntity.toStoredData(value)";
         }
         if (type === "array") {
-            storedValue = "value?.map((item) => InMemoryEntity.getDataForEntity(item))";
+            storedValue = "value?.map((item) => InMemoryEntity.toStoredData(item))";
         }
 
         code += `get ${propertyName}() {\n`;

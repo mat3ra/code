@@ -131,18 +131,18 @@ describe("InMemoryEntity", () => {
         expect(validateEntity(invalidEntity)).to.be.false;
     });
 
-    it("getEntityForData returns the same entity for the same data", () => {
+    it("getOrCreateEntity returns the same entity for the same data", () => {
         const data = { _id: "123" };
         const create = (config: BaseInMemoryEntitySchema) => new InMemoryEntity(config);
 
-        expect(InMemoryEntity.getEntityForData(data, create)).to.equal(
-            InMemoryEntity.getEntityForData(data, create),
+        expect(InMemoryEntity.getOrCreateEntity(data, create)).to.equal(
+            InMemoryEntity.getOrCreateEntity(data, create),
         );
     });
 
-    it("getEntityForData keeps a change made on the entity in the data", () => {
+    it("getOrCreateEntity keeps a change made on the entity in the data", () => {
         const data = { _id: "123" };
-        const entity = InMemoryEntity.getEntityForData(
+        const entity = InMemoryEntity.getOrCreateEntity(
             data,
             (config) => new InMemoryEntity(config),
         );
@@ -158,7 +158,7 @@ describe("InMemoryEntity", () => {
         const child = new InMemoryEntity({ _id: "123" });
 
         parent.descriptionObject = child;
-        const entity = InMemoryEntity.getEntityForData(
+        const entity = InMemoryEntity.getOrCreateEntity(
             parent.descriptionObject,
             (data) => new InMemoryEntity(data),
         );
@@ -168,10 +168,10 @@ describe("InMemoryEntity", () => {
         expect(parent.toJSON()).to.have.nested.property("descriptionObject.slug", "c");
     });
 
-    it("getDataForEntity returns a value that is not an entity as is", () => {
+    it("toStoredData returns a value that is not an entity as is", () => {
         const data = { _id: "123" };
 
-        expect(InMemoryEntity.getDataForEntity(data)).to.equal(data);
+        expect(InMemoryEntity.toStoredData(data)).to.equal(data);
     });
 
     it("jsonSchema clean", async () => {

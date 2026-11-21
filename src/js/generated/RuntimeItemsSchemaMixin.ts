@@ -19,7 +19,7 @@ export function runtimeItemsSchemaMixin<T extends InMemoryEntity>(
         set preProcessors(value: RuntimeItemsSchema["preProcessors"]) {
             this.setProp(
                 "preProcessors",
-                value?.map((item) => InMemoryEntity.getDataForEntity(item)),
+                value?.map((item) => InMemoryEntity.toStoredData(item)),
             );
         },
         get postProcessors() {
@@ -28,7 +28,7 @@ export function runtimeItemsSchemaMixin<T extends InMemoryEntity>(
         set postProcessors(value: RuntimeItemsSchema["postProcessors"]) {
             this.setProp(
                 "postProcessors",
-                value?.map((item) => InMemoryEntity.getDataForEntity(item)),
+                value?.map((item) => InMemoryEntity.toStoredData(item)),
             );
         },
         get monitors() {
@@ -37,7 +37,7 @@ export function runtimeItemsSchemaMixin<T extends InMemoryEntity>(
         set monitors(value: RuntimeItemsSchema["monitors"]) {
             this.setProp(
                 "monitors",
-                value?.map((item) => InMemoryEntity.getDataForEntity(item)),
+                value?.map((item) => InMemoryEntity.toStoredData(item)),
             );
         },
         get results() {
@@ -46,7 +46,7 @@ export function runtimeItemsSchemaMixin<T extends InMemoryEntity>(
         set results(value: RuntimeItemsSchema["results"]) {
             this.setProp(
                 "results",
-                value?.map((item) => InMemoryEntity.getDataForEntity(item)),
+                value?.map((item) => InMemoryEntity.toStoredData(item)),
             );
         },
     };

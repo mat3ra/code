@@ -23,7 +23,7 @@ export function hasDescriptionSchemaMixin<T extends InMemoryEntity>(
             return this.prop("descriptionObject");
         },
         set descriptionObject(value: DescriptionSchema["descriptionObject"]) {
-            this.setProp("descriptionObject", InMemoryEntity.getDataForEntity(value));
+            this.setProp("descriptionObject", InMemoryEntity.toStoredData(value));
         },
     };
 

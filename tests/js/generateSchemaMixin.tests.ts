@@ -337,9 +337,9 @@ describe("generateSchemaMixin Tests", function () {
             generateShemaMixin(schemas, { "entity/holder": outputPath });
 
             const generatedCode = fs.readFileSync(outputPath, "utf-8");
-            expect(generatedCode).to.include("InMemoryEntity.getDataForEntity(value)");
+            expect(generatedCode).to.include("InMemoryEntity.toStoredData(value)");
             expect(generatedCode).to.include(
-                "value?.map((item) => InMemoryEntity.getDataForEntity(item))",
+                "value?.map((item) => InMemoryEntity.toStoredData(item))",
             );
         });
     });

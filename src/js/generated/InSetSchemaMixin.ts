@@ -17,7 +17,7 @@ export function inSetSchemaMixin<T extends InMemoryEntity>(
         set inSet(value: SystemInSetSchema["inSet"]) {
             this.setProp(
                 "inSet",
-                value?.map((item) => InMemoryEntity.getDataForEntity(item)),
+                value?.map((item) => InMemoryEntity.toStoredData(item)),
             );
         },
     };

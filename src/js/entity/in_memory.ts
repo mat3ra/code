@@ -39,37 +39,39 @@ export class InMemoryEntity<S extends Schema = Schema> implements Schema {
         return new (this.prototype.constructor as InMemoryEntityConstructor<T>)(config);
     }
 
+    // stored data object → the entity that uses it as its data
     private static readonly entityByData = new WeakMap<object, InMemoryEntity>();
 
     /**
-     * @summary The entity whose `_json` is `data` itself, built with `create` on first use.
-     * On first use, `data` is rewritten in place to the entity's normalized `_json`.
-     * Data is stored once and shared with its entity, so a class holding entities sets
-     * `_isDeepCloneRequired`: otherwise its `toJSON` clean edits the child's data.
+     * Returns the entity for stored `data`, creating it with `create` the first time.
+     * The entity uses `data` itself as its `_json`, so any change to the entity is stored.
      */
-    static getEntityForData<E extends InMemoryEntity, D extends object>(
+    static getOrCreateEntity<E extends InMemoryEntity, D extends object>(
         data: D,
         create: (data: D) => E,
     ): E {
-        const knownEntity = InMemoryEntity.entityByData.get(data);
-        if (knownEntity) {
-            return knownEntity as E;
+        const existingEntity = InMemoryEntity.entityByData.get(data);
+        if (existingEntity) {
+            return existingEntity as E;
         }
         const entity = create(data);
+        // The constructor normalized a copy of `data`; store that copy in `data` and let the entity use `data`.
         Object.keys(data).forEach((key) => delete (data as Record<string, unknown>)[key]);
-        entity._json = Object.assign(data, entity._json);
+        Object.assign(data, entity._json);
+        entity._json = data;
         InMemoryEntity.entityByData.set(data, entity);
         return entity;
     }
 
     /**
-     * @summary The data to store for `value`: an entity's own `_json`, kept as that entity's data; any other value as is.
+     * Returns what a setter stores for `value`: an entity's own `_json` (that entity is then the one
+     * returned for this data), or any other value as is.
      */
-    static getDataForEntity<E extends InMemoryEntity>(value: E): E["_json"];
+    static toStoredData<E extends InMemoryEntity>(value: E): E["_json"];
 
-    static getDataForEntity<T>(value: T): T;
+    static toStoredData<T>(value: T): T;
 
-    static getDataForEntity(value: unknown) {
+    static toStoredData(value: unknown) {
         if (!(value instanceof InMemoryEntity)) {
             return value;
         }
@@ -77,7 +79,7 @@ export class InMemoryEntity<S extends Schema = Schema> implements Schema {
         return value._json;
     }
 
-    // Override if deepClone of config is required
+    // A class that stores entities sets this, so its constructor and toJSON do not edit data it shares with them.
     static _isDeepCloneRequired = false;
 
     static allowJsonSchemaTypesCoercing = false;

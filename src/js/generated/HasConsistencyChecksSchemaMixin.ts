@@ -23,7 +23,7 @@ export function hasConsistencyChecksSchemaMixin<T extends InMemoryEntity>(
         set consistencyChecks(value: HasConsistencyCheckSchema["consistencyChecks"]) {
             this.setProp(
                 "consistencyChecks",
-                value?.map((item) => InMemoryEntity.getDataForEntity(item)),
+                value?.map((item) => InMemoryEntity.toStoredData(item)),
             );
         },
     };
