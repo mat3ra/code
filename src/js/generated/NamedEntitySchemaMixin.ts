@@ -13,7 +13,7 @@ export function namedEntitySchemaMixin<T extends InMemoryEntity>(
 ): asserts item is T & NamedEntitySchemaMixin {
     // @ts-expect-error
     const properties: InMemoryEntity<NamedEntitySchemaMixin> & NamedEntitySchemaMixin = {
-        get name(): NameEntitySchema["name"] {
+        get name() {
             return this.requiredProp("name");
         },
         set name(value: NameEntitySchema["name"]) {

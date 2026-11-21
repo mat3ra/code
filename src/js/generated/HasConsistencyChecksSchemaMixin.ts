@@ -5,20 +5,7 @@ import type {
 
 import { InMemoryEntity } from "../entity/in_memory";
 
-export type HasConsistencyChecksSchemaMixin = Omit<
-    HasConsistencyCheckSchema,
-    "consistencyChecks"
-> & {
-    get consistencyChecks(): HasConsistencyCheckSchema["consistencyChecks"];
-    set consistencyChecks(
-        value:
-            | (
-                  | NonNullable<HasConsistencyCheckSchema["consistencyChecks"]>[number]
-                  | InMemoryEntity
-              )[]
-            | undefined,
-    );
-};
+export type HasConsistencyChecksSchemaMixin = HasConsistencyCheckSchema;
 
 export type HasConsistencyChecksInMemoryEntity = InMemoryEntity<
     BaseInMemoryEntitySchema & HasConsistencyChecksSchemaMixin
@@ -30,17 +17,10 @@ export function hasConsistencyChecksSchemaMixin<T extends InMemoryEntity>(
     // @ts-expect-error
     const properties: InMemoryEntity<HasConsistencyChecksSchemaMixin> &
         HasConsistencyChecksSchemaMixin = {
-        get consistencyChecks(): HasConsistencyCheckSchema["consistencyChecks"] {
+        get consistencyChecks() {
             return this.prop("consistencyChecks");
         },
-        set consistencyChecks(
-            value:
-                | (
-                      | NonNullable<HasConsistencyCheckSchema["consistencyChecks"]>[number]
-                      | InMemoryEntity
-                  )[]
-                | undefined,
-        ) {
+        set consistencyChecks(value: HasConsistencyCheckSchema["consistencyChecks"]) {
             this.setProp(
                 "consistencyChecks",
                 value?.map((item) => InMemoryEntity.getDataForEntity(item)),

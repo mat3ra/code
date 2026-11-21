@@ -64,12 +64,16 @@ export class InMemoryEntity<S extends Schema = Schema> implements Schema {
     /**
      * @summary The data to store for `value`: an entity's own `_json`, kept as that entity's data; any other value as is.
      */
-    static getDataForEntity<T>(value: T | InMemoryEntity): T {
+    static getDataForEntity<E extends InMemoryEntity>(value: E): E["_json"];
+
+    static getDataForEntity<T>(value: T): T;
+
+    static getDataForEntity(value: unknown) {
         if (!(value instanceof InMemoryEntity)) {
             return value;
         }
         InMemoryEntity.entityByData.set(value._json, value);
-        return value._json as T;
+        return value._json;
     }
 
     // Override if deepClone of config is required

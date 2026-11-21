@@ -232,7 +232,7 @@ describe("generateSchemaMixin Tests", function () {
     });
 
     describe("generateShemaMixin - Omit Type Generation", () => {
-        it("should omit only the object property when skipFields is undefined", () => {
+        it("should not use Omit when skipFields is undefined", () => {
             const outputPath = path.join(tempDir, "NoSkipFieldsSchemaMixin.ts");
             const outputPaths = {
                 "property/holder": outputPath,
@@ -241,8 +241,9 @@ describe("generateSchemaMixin Tests", function () {
             generateShemaMixin(mockSchemas, outputPaths);
 
             const generatedCode = fs.readFileSync(outputPath, "utf-8");
+            expect(generatedCode).to.not.include("Omit<");
             expect(generatedCode).to.include(
-                'export type NoSkipFieldsSchemaMixin = Omit<PropertyHolder, "metadata"> & {',
+                "export type NoSkipFieldsSchemaMixin = PropertyHolder;",
             );
             // Verify getters and setters are generated
             expect(generatedCode).to.include("get name()");
@@ -255,7 +256,7 @@ describe("generateSchemaMixin Tests", function () {
             expect(generatedCode).to.include("): asserts item is T & NoSkipFieldsSchemaMixin {");
         });
 
-        it("should omit only the object property when skipFields is an empty array", () => {
+        it("should not use Omit when skipFields is an empty array", () => {
             const outputPath = path.join(tempDir, "EmptySkipFieldsSchemaMixin.ts");
             const outputPaths = {
                 "property/holder": outputPath,
@@ -265,8 +266,9 @@ describe("generateSchemaMixin Tests", function () {
             generateShemaMixin(mockSchemas, outputPaths, skipFields);
 
             const generatedCode = fs.readFileSync(outputPath, "utf-8");
+            expect(generatedCode).to.not.include("Omit<");
             expect(generatedCode).to.include(
-                'export type EmptySkipFieldsSchemaMixin = Omit<PropertyHolder, "metadata"> & {',
+                "export type EmptySkipFieldsSchemaMixin = PropertyHolder;",
             );
             // Verify getters and setters are generated
             expect(generatedCode).to.include("get description()");
@@ -338,29 +340,6 @@ describe("generateSchemaMixin Tests", function () {
             expect(generatedCode).to.include("InMemoryEntity.getDataForEntity(value)");
             expect(generatedCode).to.include(
                 "value?.map((item) => InMemoryEntity.getDataForEntity(item))",
-            );
-        });
-
-        it("should type an object or array setter to take an entity and its getter as data", () => {
-            const outputPath = path.join(tempDir, "EntityHolderSchemaMixin.ts");
-            const schemas: JSONSchema7[] = [
-                {
-                    $id: "entity/holder",
-                    properties: { application: { type: "object" }, units: { type: "array" } },
-                },
-            ];
-
-            generateShemaMixin(schemas, { "entity/holder": outputPath });
-
-            const generatedCode = fs.readFileSync(outputPath, "utf-8");
-            expect(generatedCode).to.include(
-                'get application(): EntityHolderSchema["application"];',
-            );
-            expect(generatedCode).to.include(
-                'set application(value: EntityHolderSchema["application"] | InMemoryEntity);',
-            );
-            expect(generatedCode).to.include(
-                '(NonNullable<EntityHolderSchema["units"]>[number] | InMemoryEntity)[]',
             );
         });
     });
