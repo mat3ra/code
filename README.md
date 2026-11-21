@@ -18,7 +18,7 @@ npm install @mat3ra/code
 For development:
 
 ```bash
-git clone https://github.com/Exabyte-io/code.git
+git clone https://github.com/mat3ra/code.git
 ```
 
 
@@ -29,7 +29,7 @@ This repository is an [open-source](LICENSE.md) work-in-progress and we welcome 
 We regularly deploy the latest code containing all accepted contributions online as part of the
 [Mat3ra.com](https://mat3ra.com) platform, so contributors will see their code in action there.
 
-See [ESSE](https://github.com/Exabyte-io/esse) for additional context regarding the data schemas used here.
+See [ESSE](https://github.com/mat3ra/esse) for additional context regarding the data schemas used here.
 
 Useful commands for development:
 
