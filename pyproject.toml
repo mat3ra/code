@@ -19,7 +19,7 @@ dependencies = [
     "numpy",
     "jsonschema>=2.6.0",
     "pydantic>=2.7.1",
-    "mat3ra-esse",
+    "mat3ra-esse @ git+https://github.com/mat3ra/esse@b4b462667d6dc60a8c0d34ce094e1657ec64cffd",
     "mat3ra-utils"
 ]
 
@@ -50,7 +50,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-git_describe_command = "git describe --tags --long"
+git_describe_command = "git describe --tags --long "
 
 [tool.setuptools.packages.find]
 where = ["src/py"]
