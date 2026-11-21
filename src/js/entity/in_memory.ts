@@ -40,7 +40,7 @@ export class InMemoryEntity<S extends Schema = Schema> implements Schema {
     }
 
     // stored data object → the entity that uses it as its data
-    private static readonly entityByData = new WeakMap<object, InMemoryEntity>();
+    private static readonly entityByData = new WeakMap<object, object>();
 
     /**
      * Returns the entity for stored `data`, creating it with `create` the first time.
@@ -67,11 +67,7 @@ export class InMemoryEntity<S extends Schema = Schema> implements Schema {
      * Returns what a setter stores for `value`: an entity's own `_json` (that entity is then the one
      * returned for this data), or any other value as is.
      */
-    static toStoredData<E extends InMemoryEntity>(value: E): E["_json"];
-
-    static toStoredData<T>(value: T): T;
-
-    static toStoredData(value: unknown) {
+    static toStoredData<S>(value: S | InMemoryEntity<S & Schema>): S {
         if (!(value instanceof InMemoryEntity)) {
             return value;
         }
