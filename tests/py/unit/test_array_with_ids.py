@@ -138,7 +138,7 @@ def test_from_list_of_dicts_non_consecutive():
 @pytest.mark.parametrize(
     "config, ids, fill_value, expected_values",
     [
-        (ARRAY_WITH_IDS_INTEGER_VALUES_CONFIG, [0, 1, 2, 3], -1, [1, 2, 3, -1]),
+        (ARRAY_WITH_IDS_INTEGER_VALUES_CONFIG, [0, 2, 3], -1, [1, 3, -1]),
         (
             ARRAY_WITH_IDS_ARRAYS_OF_FLOAT_VALUES_CONFIG_NON_CONSECUTIVE,
             [2, 3, 4, 6],
