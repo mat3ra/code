@@ -46,11 +46,9 @@ class ArrayWithIds(BaseModel):
     def to_array_of_values_with_ids(self) -> List[ValueWithId]:
         return [ValueWithId(id=id, value=item) for id, item in zip(self.ids, self.values)]
 
-    def to_padded_array_of_values(self, length: int, fill_value: Any) -> List[Any]:
-        padded_values = [fill_value] * length
-        for id, value in zip(self.ids, self.values):
-            padded_values[id] = value
-        return padded_values
+    def to_padded_array_of_values(self, ids: List[int], fill_value: Any) -> List[Any]:
+        value_by_id = dict(zip(self.ids, self.values))
+        return [value_by_id.get(id, fill_value) for id in ids]
 
     def get_element_value_by_index(self, index: int) -> Any:
         return self.values[index] if index < len(self.values) else None
