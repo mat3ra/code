@@ -1,6 +1,7 @@
 import json
 
 import numpy as np
+import pytest
 from mat3ra.code.array_with_ids import ArrayWithIds, RoundedArrayWithIds
 
 ARRAY_WITH_IDS_INTEGER_VALUES_CONFIG = {"values": [1, 2, 3], "ids": [0, 1, 2]}
@@ -132,6 +133,23 @@ def test_from_list_of_dicts_non_consecutive():
     assert instance.ids == ARRAY_WITH_IDS_ARRAYS_OF_FLOAT_VALUES_CONFIG_NON_CONSECUTIVE["ids"]
     assert instance.to_dict() == ARRAY_WITH_IDS_ARRAYS_OF_FLOAT_VALUES_CONFIG_NON_CONSECUTIVE_TO_DICT_OUTPUT
     assert instance.to_json() == ARRAY_WITH_IDS_ARRAYS_OF_FLOAT_VALUES_CONFIG_NON_CONSECUTIVE_TO_JSON_OUTPUT
+
+
+@pytest.mark.parametrize(
+    "config, length, fill_value, expected_values",
+    [
+        (ARRAY_WITH_IDS_INTEGER_VALUES_CONFIG, 4, -1, [1, 2, 3, -1]),
+        (
+            ARRAY_WITH_IDS_ARRAYS_OF_FLOAT_VALUES_CONFIG_NON_CONSECUTIVE,
+            7,
+            None,
+            [None, None, [1.23456789, 2.3456789], None, [3.456789, 4.56789], None, [-5.6789, 0.0000006789]],
+        ),
+    ],
+)
+def test_to_padded_array_of_values(config, length, fill_value, expected_values):
+    instance = ArrayWithIds(**config)
+    assert instance.to_padded_array_of_values(length, fill_value) == expected_values
 
 
 def test_filter_by_values():
