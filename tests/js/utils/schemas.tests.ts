@@ -1,11 +1,14 @@
 /* eslint-disable no-unused-expressions */
 // @ts-nocheck
 /* eslint-disable no-unsafe-optional-chaining */
+import JSONSchemasInterface from "@mat3ra/esse/dist/js/esse/JSONSchemasInterface";
+import allSchemas from "@mat3ra/esse/dist/js/schemas.json";
 import { expect } from "chai";
 
 import {
     buildDependencies,
     getSchemaWithDependencies,
+    schemaByNamedEntityName,
     typeofSchema,
 } from "../../../src/js/utils/schemas";
 import {
@@ -135,5 +138,11 @@ describe("Schema utility", () => {
         });
         expect(typeofSchema(objSchemaNoType)).to.be.equal("object");
         expect(typeofSchema(arraySchemaNoType)).to.be.equal("array");
+    });
+    it("schema of a name that ends another schema id is found by its own id", () => {
+        JSONSchemasInterface.setSchemas(allSchemas);
+        expect(schemaByNamedEntityName("formation_energy").$id).to.be.equal(
+            "properties-directory/scalar/formation-energy",
+        );
     });
 });
